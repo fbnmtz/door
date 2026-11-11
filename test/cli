@@ -52,13 +52,25 @@ cleanup() {
 trap cleanup EXIT
 
 output=$("$CLI" --help)
-assert_output_contains "main help renders" "$output" "Omarchy command center"
+assert_output_contains "main help renders" "$output" "DOOR command center"
 assert_output_contains "main help includes hardware group" "$output" "hw"
 assert_output_contains "main help includes package group" "$output" "pkg"
 if grep -Eq '^  [a-z0-9-]+[[:space:]].*\([0-9]+\)$' <<<"$output"; then
   fail "main help does not show group counts"
 fi
 pass "main help does not show group counts"
+
+DOOR_CLI="$ROOT/bin/door"
+output=$("$DOOR_CLI" --help)
+assert_output_contains "DOOR entrypoint renders its branded help" "$output" "door <command>"
+"$DOOR_CLI" commands --check >/dev/null
+pass "DOOR entrypoint forwards command validation"
+output=$("$DOOR_CLI" commands)
+assert_output_contains "DOOR command list uses DOOR routes" "$output" "door theme set <theme-name>"
+if [[ $output == *$'\n  omarchy theme set <theme-name>'* ]]; then
+  fail "DOOR command list does not advertise the legacy route"
+fi
+pass "DOOR command list hides the legacy route"
 
 output=$("$CLI" commands)
 assert_output_contains "commands lists documented commands" "$output" "omarchy theme set <theme-name>"

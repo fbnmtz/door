@@ -1,0 +1,4 @@
+#!/bin/bash
+
+DOOR_BIN_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+DOOR_COMMAND_CENTER=1 exec "$DOOR_BIN_DIR/omarchy" "$@"

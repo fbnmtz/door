@@ -1,0 +1,52 @@
+name: Build DOOR ISO
+
+on:
+  workflow_dispatch:
+    inputs:
+      arch:
+        description: Target architecture
+        required: true
+        type: choice
+        options:
+          - x86_64
+          - aarch64
+        default: x86_64
+
+permissions:
+  contents: read
+
+concurrency:
+  group: iso-build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: [self-hosted, linux, x64, door-iso]
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Check builder capacity
+        run: |
+          set -euo pipefail
+          command -v docker
+          docker info >/dev/null
+          available_gb=$(df -BG --output=avail "$GITHUB_WORKSPACE" | tail -1 | tr -dc 0-9)
+          (( available_gb >= 50 )) || {
+            echo "::error::ISO build needs at least 50 GB free; found ${available_gb} GB"
+            exit 1
+          }
+
+      - name: Build ISO
+        env:
+          ARCH: ${{ inputs.arch }}
+        run: bash scripts/door-iso-make.sh --arch "$ARCH" --no-boot-offer --keep-pkg-cache
+
+      - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce
+        with:
+          name: door-iso-${{ inputs.arch }}-${{ github.run_number }}
+          path: iso/release/*.iso
+          if-no-files-found: error
+          retention-days: 14
