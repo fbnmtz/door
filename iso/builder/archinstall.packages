@@ -1,0 +1,16 @@
+alsa-firmware
+amd-ucode
+base
+base-devel
+efibootmgr
+intel-ucode
+linux-firmware
+linux-omarchy
+linux-omarchy-headers
+limine
+omarchy-keyring
+openssh
+pipewire
+snapper
+sof-firmware
+tailscale
